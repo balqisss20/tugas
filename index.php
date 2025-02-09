@@ -2,16 +2,29 @@
 // Koneksi ke database
 include 'koneksi.php';
 
-// Query untuk mengambil data pegawai
-$query = "SELECT p.id_pegawai, p.nama, p.alamat, p.tanggal_lahir, p.jk, j.GAJI_POKOK, p.no_telpon,p.email ,j.id_jabatan,j.nama_jabatan,d.nama_depertemen, d.id_depertemen
-          FROM Pegawai p
-          JOIN Jabatan j ON p.id_jabatan = j.id_jabatan
-          JOIN depertemen d ON p.id_depertemen = d.id_depertemen";
+// Panggil Stored Procedure
+$query = "CALL GetPegawaiInfo()";
 $result = mysqli_query($koneksi, $query);
-$query_Jabatan = "SELECT * FROM Jabatan LIMIT 3";
+
+// Ambil semua data hasil query sebelum menjalankan query lain
+$pegawaiData = [];
+while ($row = mysqli_fetch_assoc($result)) {
+    $pegawaiData[] = $row;
+}
+
+// Tutup result set untuk menghindari error "Commands out of sync"
+mysqli_free_result($result);
+
+// Pindah ke result set berikutnya jika ada
+mysqli_next_result($koneksi);
+
+// Jalankan query lain setelah stored procedure
+$query_Jabatan = "SELECT * FROM jabatan LIMIT 3";
 $result_Jabatan = mysqli_query($koneksi, $query_Jabatan);
-$query_depertemen = "SELECT * FROM depertemen Limit 3";
+
+$query_depertemen = "SELECT * FROM depertemen LIMIT 3";
 $result_depertemen = mysqli_query($koneksi, $query_depertemen);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -73,6 +86,7 @@ $result_depertemen = mysqli_query($koneksi, $query_depertemen);
         <div class="w-full bg-white shadow-md rounded-lg p-4">
             <h1 class="text-3xl font-bold text-center mb-8">Data Kepegawaian </h1>
             <a href="tambah_pegawai.php" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Tambah Pegawai</a>
+            <a href="riwayat_email.php" class="bg-green-500 text-white px-4 py-2 rounded mb-4 inline-block">Riwayat Email</a>
             <table class="min-w-full">
                 <thead class="bg-gray-200">
                     <tr>
@@ -86,21 +100,22 @@ $result_depertemen = mysqli_query($koneksi, $query_depertemen);
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                    <tr>
-                        <td class="px-6 py-4"><?= $row['nama'] ?></td>
-                        <td class="px-6 py-4"><?= $row['alamat'] ?></td>
-                        <td class="px-6 py-4"><?= $row['email'] ?></td>
-                        <td class="px-6 py-4"><?= $row['nama_jabatan'] ?></td>
-                        <td class="px-6 py-4"><?= $row['nama_depertemen'] ?></td>
-                        <td class="px-6 py-4"><?= "Rp " . number_format($row['GAJI_POKOK'], 0, ',', '.') ?></td>
-                        <td class="px-6 py-4">
-                            <a href="edit_pegawai.php?id=<?= $row['id_pegawai'] ?>" class="text-blue-500 hover:text-blue-700 border-solid">Edit</a>
-                            <a href="hapus_pegawai.php?id=<?= $row['id_pegawai'] ?>" class="text-red-500 hover:text-red-700 ml-2 border-solid" onclick="return confirm('Apakah Anda yakin?')">Hapus</a>
-                        </td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
+    <?php foreach ($pegawaiData as $row): ?>
+    <tr>
+        <td class="px-6 py-4"><?= $row['nama'] ?></td>
+        <td class="px-6 py-4"><?= $row['alamat'] ?></td>
+        <td class="px-6 py-4"><?= $row['email'] ?></td>
+        <td class="px-6 py-4"><?= $row['nama_jabatan'] ?></td>
+        <td class="px-6 py-4"><?= $row['nama_depertemen'] ?></td>
+        <td class="px-6 py-4"><?= "Rp " . number_format($row['GAJI_POKOK'], 0, ',', '.') ?></td>
+        <td class="px-6 py-4">
+            <a href="edit_pegawai.php?id=<?= $row['id_pegawai'] ?>" class="text-blue-500 hover:text-blue-700 border-solid">Edit</a>
+            <a href="hapus_pegawai.php?id=<?= $row['id_pegawai'] ?>" class="text-red-500 hover:text-red-700 ml-2 border-solid" onclick="return confirm('Apakah Anda yakin?')">Hapus</a>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+</tbody>
+
             </table>
         </div>
         

@@ -15,7 +15,7 @@ if (isset($_GET['id'])) {
     $query_jabatan = "SELECT * FROM jabatan";
     $result_jabatan = mysqli_query($koneksi, $query_jabatan);
 
-    // Ambil daftar cabang
+    // Ambil daftar depertemen
     $query_depertemen = "SELECT * FROM depertemen";
     $result_depertemen = mysqli_query($koneksi, $query_depertemen);
 }
